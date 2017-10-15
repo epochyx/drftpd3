@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * @author mog
- * @version $Id: SFVInfo.java 1983 2009-08-23 16:51:16Z djb61 $
+ * @version $Id$
  */
 @SuppressWarnings("serial")
 public class SFVInfo implements Serializable {

@@ -73,7 +73,7 @@ public class VirtualFileSystem {
 
 	public static final String dirName = ".dirProperties";
 
-	public static final String fileSystemPath = "/tmp/files";
+	public static final String fileSystemPath = "files";
 
 	private static final Logger logger = Logger.getLogger(VirtualFileSystem.class);
 
@@ -289,23 +289,19 @@ public class VirtualFileSystem {
 				} else {
 					// the parent is a Directory on the REAL filesystem and
 					// a something else on our virtual one...
-					throw new FileNotFoundException(
-							"You're filesystem is really messed up");
+					throw new FileNotFoundException("You're filesystem is really messed up");
 				}
 			}
 			if (realDirectory != null && realDirectory.exists()) {
 				// let's create the .dirProperties file from what we know since
 				// it should be there
-				parentInode.createDirectoryRaw(getLast(path), "drftpd",
-						"drftpd");
+				parentInode.createDirectoryRaw(getLast(path), "drftpd", "drftpd");
 				return parentInode.getInodeByName(getLast(path));
 			}
 			if (corruptedXMLFile) {
 				// we already deleted the file, but we need to tell the parent
 				// directory that it doesn't exist anymore
-				logger
-						.debug("Error loading " + fullPath + ", deleting file",
-								e);
+				logger.debug("Error loading " + fullPath + ", deleting file", e);
 				parentInode.removeMissingChild(getLast(path));
 			}
 			throw new FileNotFoundException();
