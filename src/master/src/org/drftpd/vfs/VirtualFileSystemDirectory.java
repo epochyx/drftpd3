@@ -38,16 +38,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.drftpd.exceptions.FileExistsException;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+
 /**
  * Lowest representation of a directory.<br>
  * This class deals directly w/ the actual VFS and should not be used
  * outside the of the VirtualFileSystem part.
  * @see org.drftpd.vfs.DirectoryHandle
  */
+@JsonIgnoreProperties({"name", "parent", "files", "inodes", "inodeNames", "file", "directory", "link", "inodeLoaded"})
 public class VirtualFileSystemDirectory extends VirtualFileSystemInode {
 
 	protected static final Collection<String> transientListDirectory = Arrays
-	.asList("name", "parent", "files");
+	.asList(new String[] { "name", "parent", "files"});
 
 	private transient TreeMap<String, SoftReference<VirtualFileSystemInode>> _files = 
 		new CaseInsensitiveTreeMap<String, SoftReference<VirtualFileSystemInode>>();
@@ -58,7 +64,8 @@ public class VirtualFileSystemDirectory extends VirtualFileSystemInode {
 
 	private Map<String,AtomicInteger> _slaveRefCounts = new TreeMap<String,AtomicInteger>();
 
-	public VirtualFileSystemDirectory(String user, String group) {
+	@JsonCreator
+	public VirtualFileSystemDirectory(@JsonProperty("user") String user, @JsonProperty("group") String group) {
 		super(user, group);
 	}
 
@@ -77,10 +84,6 @@ public class VirtualFileSystemDirectory extends VirtualFileSystemInode {
 		if (updateLastModified && 
 				(getLastModified() < inode.getLastModified() || _placeHolderLastModified)) {
 			setLastModified(inode.getLastModified());
-		}
-		if (getCreationTime() > inode.getLastModified() ||
-                getCreationTime() > inode.getCreationTime()) {
-			setCreationTime(inode.getCreationTime() > inode.getLastModified() ? inode.getLastModified() : inode.getCreationTime());
 		}
 		addSize(inode.getSize());
 		addChildSlaveRefCounts(inode, inode.getSlaveRefCounts());
@@ -213,9 +216,6 @@ public class VirtualFileSystemDirectory extends VirtualFileSystemInode {
 		inode.setName(name);
 		inode.setParent(this);
 		if (setLastModified) {
-			if (inode.getCreationTime() > lastModified) {
-				inode.setCreationTime(lastModified);
-			}
 			inode.setLastModified(lastModified);
 		}
 		inode.commit();

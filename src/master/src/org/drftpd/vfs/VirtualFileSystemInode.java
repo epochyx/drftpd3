@@ -34,11 +34,25 @@ import org.drftpd.io.PermissionDeniedException;
 import org.drftpd.master.CommitManager;
 import org.drftpd.master.Commitable;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+
 
 /**
  * VirtualFileSystemInode is an abstract class used to handle basic functions
  * of files/dirs/links and to keep an hierarchy/organization of the FS.
  */
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="class")
+@JsonIgnoreProperties({ "name", "parent", "inodeLoaded", "link", "file", "directory", "inodeLoaded"})
+@JsonSubTypes(
+{@JsonSubTypes.Type(VirtualFileSystemDirectory.class), @JsonSubTypes.Type(VirtualFileSystemFile.class), @JsonSubTypes.Type(VirtualFileSystemLink.class)}
+)
 public abstract class VirtualFileSystemInode implements Commitable {
 
 	protected static final Logger logger = Logger
@@ -102,12 +116,12 @@ public abstract class VirtualFileSystemInode implements Commitable {
 	 */
 	public void delete() {
 		logger.info("delete(" + this + ")");
-
+		
 		String path = getPath();
 		VirtualFileSystem.getVirtualFileSystem().deleteInode(getPath());
 		_parent.removeChild(this);
 		CommitManager.getCommitManager().remove(this);
-
+		
 		getVFS().notifyInodeDeleted(this, path);
 	}
 
@@ -121,6 +135,7 @@ public abstract class VirtualFileSystemInode implements Commitable {
 	/**
 	 * @return the KeyedMap containing the Dynamic Data. 
 	 */
+	@JsonTypeInfo(use=Id.CLASS, include=As.PROPERTY, property="class")
 	public KeyedMap<Key<?>, Object> getKeyedMap() {
 		return _keyedMap;
 	}
@@ -329,6 +344,7 @@ public abstract class VirtualFileSystemInode implements Commitable {
 		}
 	}
 
+	@JsonTypeInfo(use=Id.CLASS, include=As.PROPERTY, property="class")
 	public KeyedMap<Key<?>, Object> getPluginMap() {
 		return _pluginMap;
 	}
@@ -337,6 +353,7 @@ public abstract class VirtualFileSystemInode implements Commitable {
 		_pluginMap = data;
 	}
 
+	@JsonTypeInfo(use=Id.CLASS, include=As.PROPERTY, property="class")
 	public Map<String,Object> getUntypedPluginMap() {
 		return _untypedPluginMap;
 	}
@@ -359,6 +376,7 @@ public abstract class VirtualFileSystemInode implements Commitable {
 		return value;
 	}
 
+	@JsonTypeInfo(use=Id.CLASS, include=As.PROPERTY, property="class")
 	public <T> T getPluginMetaData(Key<T> key) throws KeyNotFoundException {
 		return _pluginMap.getObject(key);
 	}
@@ -378,6 +396,7 @@ public abstract class VirtualFileSystemInode implements Commitable {
 	}
 
 	@SuppressWarnings("unchecked")
+	@JsonTypeInfo(use=Id.CLASS, include=As.PROPERTY, property="class")
 	public <T> T getUntypedPluginMetaData(String key) {
 		T value = (T)_untypedPluginMap.get(key);
 
@@ -392,11 +411,10 @@ public abstract class VirtualFileSystemInode implements Commitable {
 	@Override
 	public String toString() {
 		StringBuffer ret = new StringBuffer();
-		ret.append("[path=").append(getPath()).append("]");
-		ret.append("[user,group=").append(getUsername()).append(",").append(getGroup()).append("]");
-		ret.append("[creationTime=").append(getCreationTime()).append("]");
-		ret.append("[lastModified=").append(getLastModified()).append("]");
-		ret.append("[size=").append(getSize()).append("]");
+		ret.append("[path=" + getPath() + "]");
+		ret.append("[user,group=" + getUsername() + "," + getGroup() + "]");
+		ret.append("[lastModified=" + getLastModified() + "]");
+		ret.append("[size=" + getSize() + "]");
 		return ret.toString();
 	}
 	

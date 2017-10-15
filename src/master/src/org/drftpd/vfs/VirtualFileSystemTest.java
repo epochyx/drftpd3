@@ -17,9 +17,16 @@
  */
 package org.drftpd.vfs;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import org.drftpd.exceptions.FileExistsException;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import junit.framework.TestCase;
 
@@ -61,7 +68,27 @@ public class VirtualFileSystemTest extends TestCase {
 	 * Test method for 'org.drftpd.vfs.VirtualFileSystem.loadInode(String)'
 	 */
 	public void testLoadInode() {
-
+		System.out.println("Testing Loading");
+		vfs = null;
+		vfs = VirtualFileSystem.getVirtualFileSystem();
+	}
+	
+	public void testWrite() {
+		System.out.println("Testing Write");
+		try {
+			vfs.getRoot().refresh(true);
+		for (String file : vfs.getRoot().getInodeNames()) {
+			VirtualFileSystemInode inode = vfs.getRoot().getInodeByName(file);
+			inode.writeToDisk();		
+		}
+		}
+		catch (FileNotFoundException e) {
+			throw new RuntimeException("this can't be good1");
+		}
+		catch (IOException e) {
+			throw new RuntimeException("this can't be good2");
+		}
+		
 	}
 
 	public void testMemory() {
@@ -107,8 +134,9 @@ public class VirtualFileSystemTest extends TestCase {
 
 	/*
 	 * Test method for 'org.drftpd.vfs.VirtualFileSystemInode.rename(String)'
-	 */
+	 
 	public void testRename() throws FileNotFoundException, FileExistsException {
+		System.out.println("Testing Rename");
 		//vfs.getRoot().createDirectory("Test", "drftpd", "drftpd");
 		VirtualFileSystemInode inode = vfs.getInodeByPath("/Test");
 		((VirtualFileSystemDirectory) inode).createFile("testme", "drftpd", "drftpd", "testSlave");
@@ -117,7 +145,7 @@ public class VirtualFileSystemTest extends TestCase {
 		assertEquals("/Test2", inode.getPath());
 		assertNotNull(((VirtualFileSystemDirectory) inode).getInodeByName("testme"));
 	}
-
+*/
 	/*
 	 * Test method for 'org.drftpd.vfs.VirtualFileSystem.stripLast(String)'
 	 */

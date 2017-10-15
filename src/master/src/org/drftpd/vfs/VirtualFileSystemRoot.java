@@ -17,6 +17,8 @@
  */
 package org.drftpd.vfs;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class VirtualFileSystemRoot extends VirtualFileSystemDirectory {
 	
 	public VirtualFileSystemRoot() {
@@ -42,6 +44,7 @@ public class VirtualFileSystemRoot extends VirtualFileSystemDirectory {
 	 * @see org.drftpd.vfs.VirtualFileSystemInode#getPath()
 	 */
 	@Override
+	@JsonIgnore
 	public String getPath() {
 		return _name;
 	}

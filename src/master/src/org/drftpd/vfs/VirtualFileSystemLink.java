@@ -28,9 +28,16 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 /**
  * Lowest representation of a directory.
  */
+@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="class")
+@JsonIgnoreProperties({ "name", "parent", "inodeLoaded", "link", "file", "directory", "inodeLoaded"})
 public class VirtualFileSystemLink extends VirtualFileSystemInode {
 
 	private String _link;
@@ -38,7 +45,8 @@ public class VirtualFileSystemLink extends VirtualFileSystemInode {
 	protected static final Collection<String> transientListLink = Arrays
 			.asList(new String[] { "name", "parent", "size" });
 
-	public VirtualFileSystemLink(String user, String group, String link) {
+	@JsonCreator
+	public VirtualFileSystemLink(@JsonProperty("user") String user, @JsonProperty("group") String group, @JsonProperty("linkPath") String link) {
 		super(user, group);
 		_link = link;
 	}

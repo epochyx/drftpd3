@@ -24,9 +24,11 @@ import java.io.Serializable;
 import org.drftpd.dynamicdata.Key;
 import org.drftpd.vfs.CaseInsensitiveTreeMap;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * @author mog
- * @version $Id$
+ * @version $Id: SFVInfo.java 1983 2009-08-23 16:51:16Z djb61 $
  */
 @SuppressWarnings("serial")
 public class SFVInfo implements Serializable {
@@ -60,6 +62,7 @@ public class SFVInfo implements Serializable {
 		_entries = entries;
 	}
 
+	@JsonIgnore
 	public int getSize() {
 		return _entries.size();
 	}

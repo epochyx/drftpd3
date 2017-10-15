@@ -44,6 +44,10 @@ import org.drftpd.vfs.event.VirtualFileSystemRenameEvent;
 import org.drftpd.vfs.event.VirtualFileSystemSizeEvent;
 import org.drftpd.vfs.event.VirtualFileSystemSlaveEvent;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class VirtualFileSystem {
 
 	protected static final InodeHandleCaseInsensitiveComparator INODE_HANDLE_CASE_INSENSITIVE_COMPARATOR = 
@@ -69,7 +73,7 @@ public class VirtualFileSystem {
 
 	public static final String dirName = ".dirProperties";
 
-	public static final String fileSystemPath = "files";
+	public static final String fileSystemPath = "/tmp/files";
 
 	private static final Logger logger = Logger.getLogger(VirtualFileSystem.class);
 
@@ -118,6 +122,7 @@ public class VirtualFileSystem {
 	}
 
 	private VirtualFileSystemRoot _root = null;
+	private static ObjectMapper mapper = new ObjectMapper();
 
 	/**
 	 * Create a VirtualFileSystem object, creating or not a new directory tree.
@@ -220,8 +225,9 @@ public class VirtualFileSystem {
 	 */
 	protected VirtualFileSystemInode loadInode(String path)
 			throws FileNotFoundException {
+		//System.out.println("Loading inode - " + path);
 		String fullPath = fileSystemPath + path;
-		//logger.debug("Loading inode - " + fullPath);
+		
 		File xmlFile = new File(fullPath);
 		File realDirectory = null;
 		if (xmlFile.isDirectory()) {
@@ -231,13 +237,31 @@ public class VirtualFileSystem {
 		}
 		XMLDecoder xmlDec = null;
 		try {
-			xmlDec = new XMLDecoder(new BufferedInputStream(new FileInputStream(fullPath)));
+			/* 
+			 
+			 
+			xmlDec = new XMLDecoder(new BufferedInputStream(
+					new FileInputStream(fullPath)));
 			xmlDec.setExceptionListener(new VFSExceptionListener(fullPath));
 			ClassLoader prevCL = Thread.currentThread().getContextClassLoader();
 			Thread.currentThread().setContextClassLoader(CommonPluginUtils.getClassLoaderForObject(this));
-			VirtualFileSystemInode inode = (VirtualFileSystemInode) xmlDec.readObject();
+			VirtualFileSystemInode inode = (VirtualFileSystemInode) xmlDec
+					.readObject();
 			Thread.currentThread().setContextClassLoader(prevCL);
 			inode.setName(getLast(path));
+			
+			/* FEAR */
+			VirtualFileSystemInode inode;
+			VirtualFileSystemInode jsonInode = mapper.readValue(new BufferedInputStream(
+					new FileInputStream(fullPath)), VirtualFileSystemInode.class);
+			inode = jsonInode;
+			inode.setName(getLast(path));
+			/**/
+			//System.out.println("Loaded: " + inode);
+			
+			
+			
+			
 			if (inode.isDirectory()) {
 				VirtualFileSystemDirectory dir = (VirtualFileSystemDirectory) inode;
 				dir.setFiles(realDirectory.list(dirFilter));
@@ -245,6 +269,7 @@ public class VirtualFileSystem {
 			inode.inodeLoadCompleted();
 			return inode;
 		} catch (Exception e) {
+			System.out.println(e);
 			boolean corruptedXMLFile = xmlFile.exists();
 			if (corruptedXMLFile) {
 				// parsing error! Let's get rid of the offending bugger
@@ -264,19 +289,23 @@ public class VirtualFileSystem {
 				} else {
 					// the parent is a Directory on the REAL filesystem and
 					// a something else on our virtual one...
-					throw new FileNotFoundException("You're filesystem is really messed up");
+					throw new FileNotFoundException(
+							"You're filesystem is really messed up");
 				}
 			}
 			if (realDirectory != null && realDirectory.exists()) {
 				// let's create the .dirProperties file from what we know since
 				// it should be there
-				parentInode.createDirectoryRaw(getLast(path), "drftpd", "drftpd");
+				parentInode.createDirectoryRaw(getLast(path), "drftpd",
+						"drftpd");
 				return parentInode.getInodeByName(getLast(path));
 			}
 			if (corruptedXMLFile) {
 				// we already deleted the file, but we need to tell the parent
 				// directory that it doesn't exist anymore
-				logger.debug("Error loading " + fullPath + ", deleting file", e);
+				logger
+						.debug("Error loading " + fullPath + ", deleting file",
+								e);
 				parentInode.removeMissingChild(getLast(path));
 			}
 			throw new FileNotFoundException();
@@ -342,17 +371,26 @@ public class VirtualFileSystem {
 			if (inode instanceof VirtualFileSystemRoot) {
 				new File(fileSystemPath).mkdirs();
 				fullPath = fullPath + separator + dirName;
+				
 			} else if (inode.isDirectory()) {
 				new File(fullPath).mkdirs();
 				fullPath = fullPath + separator + dirName;
 			} else {
 				new File(getRealPath(inode.getParent().getPath())).mkdirs();
 			}
+			
+			/*
 			enc = new XMLEncoder(new BufferedOutputStream(
 					new SafeFileOutputStream(fullPath)));
 			inode.setupXML(enc);
 			enc.setExceptionListener(new VFSExceptionListener(fullPath));
+			
 			enc.writeObject(inode);
+			*/
+			mapper.writeValue(new BufferedOutputStream(
+					new SafeFileOutputStream(fullPath)), inode);
+			
+
 		} catch (IOException e) {
 			logger.error("Unable to write " + fullPath + " to disk", e);
 		} finally {
