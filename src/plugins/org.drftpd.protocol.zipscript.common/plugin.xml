@@ -15,5 +15,15 @@
 		<library id="org.drftpd.protocol.zipscript.common" path="classes/" type="code">
 			<export prefix="*" />
 		</library>
+		<library id="jackson-core" path="../../../lib/jackson-core-2.9.2.jar" type="code">
+			<export prefix="*" />
+		</library>
+		<library id="jackson-annotations" path="../../../lib/jackson-annotations-2.9.2.jar" type="code">
+			<export prefix="*" />
+		</library>
+		<library id="jackson-databind" path="../../../lib/jackson-databind-2.9.2.jar" type="code">
+			<export prefix="*" />
+		</library>
+
 	</runtime>
 </plugin>
