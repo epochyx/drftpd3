@@ -19,18 +19,41 @@ public class EncryptedBeanUserManager extends BeanUserManager {
 	protected static final Logger logger = Logger.getLogger(EncryptedBeanUserManager.class);
 	
 	private int _passcrypt = 0;
+	private int _compatcrypt = 0;
 	
 	/*
 	 * Constructor to read encryption type, and subscribe to events
 	 */
 	public EncryptedBeanUserManager() {
 		AnnotationProcessor.process(this);
+		readCompatcrypt();
 		readPasscrypt();
 	}
 	
     @EventSubscriber
 	public void onReloadEvent(ReloadEvent event) {
     	readPasscrypt();
+    	readCompatcrypt();
+    }
+    
+    /* Allow password to be imported using a different hash method
+     * Namely 'crypt' allows crypt password (start with a '+')
+     * md5 with a $1$ at the beginning
+     * as it was done in dr 2.x
+     */
+    private void readCompatcrypt() {
+    	Properties cfg =  GlobalContext.getGlobalContext().getPluginsConfig().getPropertiesForPlugin("encryptedbeanuser.conf");
+    	String compatcrypt = cfg.getProperty("compatcrypt");
+    	if (compatcrypt.equalsIgnoreCase("crypt")) {
+    		_compatcrypt = 1;
+    	} else if (compatcrypt.equalsIgnoreCase("md5")) {
+    		_compatcrypt = 2;
+    	}
+    }
+    
+    /* return compat setting */
+    protected int getCompatcrypt() {
+    	return _compatcrypt;
     }
 	
 	/*

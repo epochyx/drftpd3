@@ -25,6 +25,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import org.drftpd.util.Crypt;
 
 /**
  * @author CyBeR
@@ -97,8 +98,33 @@ public class EncryptedBeanUser extends BeanUser {
 			this.setUploadedTimeForPeriod(i, user.getUploadedTimeForPeriod(i));			
 		}
 		
-		this.setEncryption(0);
-		this.setPassword(user.getPassword());
+		String password = user.getPassword();
+		
+		/* If compat is enabled, we check if password starts with a +
+		 * if is does, it is supposed to be hashed using crypt()
+		 * and should be stored as is
+		 */
+		
+		if (_um.getCompatcrypt() == 1 && password.startsWith("+")) {
+			logger.debug("Writing password as is for compatibility for " + user.getName());
+			super.setPassword(password);
+		}
+		else {
+			
+			// MD5 is supported, but without the scheme prefix
+			if (_um.getCompatcrypt() == 2 && password.startsWith("$1$")) {
+				logger.debug("Removing prefix for MD5 compatibility");
+				this.setEncryption(2);
+				super.setPassword(password.substring(3));
+				
+			}
+			else {
+				logger.debug("Using defined encryption for " + user.getName());
+				this.setEncryption(0);
+				this.setPassword(password);
+			}
+			
+		}
 		
 		this.commit();
 	}	
@@ -152,6 +178,7 @@ public class EncryptedBeanUser extends BeanUser {
 		String encryptedPassword;
 		boolean result = false;
 		password = password.trim();
+		
 
 		switch (getEncryption()) {
 			case 1: encryptedPassword = Encrypt(password,"MD2");
@@ -169,9 +196,18 @@ public class EncryptedBeanUser extends BeanUser {
 			case 7: if (BCrypt.checkpw(password, storedPassword)) result = true; break;
 			default: if (password.equals(storedPassword)) result = true; break;
 		}
+		
+		/* If compat crypt is on, we check against crypt(), but let the logic go on
+		 * so the newly stored password will have the proper hash method
+		 */
+		if (_um.getCompatcrypt() == 1) {
+			String checkEncryptedPassword = Crypt.crypt(storedPassword.substring(1), password);
+			if (checkEncryptedPassword.equals(storedPassword.substring(1)))
+				result = true;
+		}
 
 		if (getEncryption() != _um.getPasscrypt()) {
-			logger.debug("Converting Password To Current Encryption");
+			logger.debug("Converting Password To Current Encryption for " + getName());
 			setEncryption(0);
 			this.setPassword(password);
 			super.commit();
