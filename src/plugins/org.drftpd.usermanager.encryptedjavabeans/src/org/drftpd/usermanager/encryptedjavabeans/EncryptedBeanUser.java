@@ -25,6 +25,7 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import org.drftpd.util.Crypt;
 
 /**
  * @author CyBeR
@@ -97,8 +98,20 @@ public class EncryptedBeanUser extends BeanUser {
 			this.setUploadedTimeForPeriod(i, user.getUploadedTimeForPeriod(i));			
 		}
 		
-		this.setEncryption(0);
-		this.setPassword(user.getPassword());
+		String password = user.getPassword();
+		
+		/* If compat is enabled, we check if password starts with a +
+		 * if is does, it is supposed to be hashed using crypt()
+		 * and should be stored as is
+		 */
+		
+		if (_um.getCompatcrypt() == 1 && password.startsWith("+")) {
+			super.setPassword(password);
+		}
+		else {
+			this.setEncryption(0);
+			this.setPassword(user.getPassword());
+		}
 		
 		this.commit();
 	}	
@@ -152,6 +165,7 @@ public class EncryptedBeanUser extends BeanUser {
 		String encryptedPassword;
 		boolean result = false;
 		password = password.trim();
+		
 
 		switch (getEncryption()) {
 			case 1: encryptedPassword = Encrypt(password,"MD2");
@@ -168,6 +182,15 @@ public class EncryptedBeanUser extends BeanUser {
 				if (encryptedPassword != null && encryptedPassword.equals(storedPassword)) result = true; break;
 			case 7: if (BCrypt.checkpw(password, storedPassword)) result = true; break;
 			default: if (password.equals(storedPassword)) result = true; break;
+		}
+		
+		/* If compat crypt is on, we check against crypt(), but let the logic go on
+		 * so the newly stored password will have the proper hash method
+		 */
+		if (_um.getCompatcrypt() == 1) {
+			String checkEncryptedPassword = Crypt.crypt(storedPassword.substring(1), password);
+			if (checkEncryptedPassword.equals(storedPassword.substring(1)))
+				result = true;
 		}
 
 		if (getEncryption() != _um.getPasscrypt()) {

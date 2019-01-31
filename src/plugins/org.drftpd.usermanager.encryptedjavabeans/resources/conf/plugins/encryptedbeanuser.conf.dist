@@ -8,3 +8,7 @@
 ##                                                                          ##
 ##############################################################################
 passcrypt=bcrypt
+#
+# Allow passwords from drftpd2 that used the crypt() method
+# Note: the passcrypt will be used to hash the password at login/chpass
+#compatcrypt=crypt
