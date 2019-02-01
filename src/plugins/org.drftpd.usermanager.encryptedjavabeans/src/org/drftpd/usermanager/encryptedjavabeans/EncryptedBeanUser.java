@@ -110,9 +110,20 @@ public class EncryptedBeanUser extends BeanUser {
 			super.setPassword(password);
 		}
 		else {
-			logger.debug("Using defined encryption for " + user.getName());
-			this.setEncryption(0);
-			this.setPassword(user.getPassword());
+			
+			// MD5 is supported, but without the scheme prefix
+			if (_um.getCompatcrypt() == 2 && password.startsWith("$1$")) {
+				logger.debug("Removing prefix for MD5 compatibility");
+				this.setEncryption(2);
+				super.setPassword(password.substring(3));
+				
+			}
+			else {
+				logger.debug("Using defined encryption for " + user.getName());
+				this.setEncryption(0);
+				this.setPassword(password);
+			}
+			
 		}
 		
 		this.commit();

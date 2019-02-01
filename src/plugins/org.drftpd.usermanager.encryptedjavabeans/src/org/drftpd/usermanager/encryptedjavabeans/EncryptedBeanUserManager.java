@@ -38,6 +38,7 @@ public class EncryptedBeanUserManager extends BeanUserManager {
     
     /* Allow password to be imported using a different hash method
      * Namely 'crypt' allows crypt password (start with a '+')
+     * md5 with a $1$ at the beginning
      * as it was done in dr 2.x
      */
     private void readCompatcrypt() {
@@ -45,6 +46,8 @@ public class EncryptedBeanUserManager extends BeanUserManager {
     	String compatcrypt = cfg.getProperty("compatcrypt");
     	if (compatcrypt.equalsIgnoreCase("crypt")) {
     		_compatcrypt = 1;
+    	} else if (compatcrypt.equalsIgnoreCase("md5")) {
+    		_compatcrypt = 2;
     	}
     }
     
