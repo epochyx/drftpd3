@@ -106,9 +106,11 @@ public class EncryptedBeanUser extends BeanUser {
 		 */
 		
 		if (_um.getCompatcrypt() == 1 && password.startsWith("+")) {
+			logger.debug("Writing password as is for compatibility for " + user.getName());
 			super.setPassword(password);
 		}
 		else {
+			logger.debug("Using defined encryption for " + user.getName());
 			this.setEncryption(0);
 			this.setPassword(user.getPassword());
 		}
@@ -194,7 +196,7 @@ public class EncryptedBeanUser extends BeanUser {
 		}
 
 		if (getEncryption() != _um.getPasscrypt()) {
-			logger.debug("Converting Password To Current Encryption");
+			logger.debug("Converting Password To Current Encryption for " + getName());
 			setEncryption(0);
 			this.setPassword(password);
 			super.commit();
