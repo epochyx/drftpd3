@@ -26,6 +26,7 @@ public class EncryptedBeanUserManager extends BeanUserManager {
 	 */
 	public EncryptedBeanUserManager() {
 		AnnotationProcessor.process(this);
+		readCompatcrypt();
 		readPasscrypt();
 	}
 	
