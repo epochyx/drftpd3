@@ -19,9 +19,11 @@ package org.drftpd.vfs.perms.def;
 
 import org.drftpd.permissions.GlobPathPermission;
 import org.drftpd.permissions.Permission;
+import org.drftpd.util.GlobPattern;
 import org.drftpd.vfs.perms.VFSPermHandler;
 
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /**
@@ -31,6 +33,7 @@ import java.util.regex.PatternSyntaxException;
  */
 public class VFSDefaultPermission extends VFSPermHandler {	
 	public void handle(String directive, StringTokenizer st) throws PatternSyntaxException {
-		addPermission(directive, new GlobPathPermission(st.nextToken(), Permission.makeUsers(st)));
+		Pattern p = GlobPattern.compile(st.nextToken(), Pattern.CASE_INSENSITIVE);
+		addPermission(directive, new GlobPathPermission(p, Permission.makeUsers(st)));
 	}	
 }
