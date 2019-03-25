@@ -39,7 +39,7 @@ public class GlobPathPermission extends PathPermission {
 
 	public GlobPathPermission(String pattern, Collection<String> users) throws PatternSyntaxException {
 		super(users);
-		_pat = GlobPattern.compile(pattern);
+		_pat = GlobPattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 	}
 
 	public boolean checkPath(InodeHandle inode) {
