@@ -19,6 +19,7 @@ package org.drftpd.plugins.sitebot;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import java.util.Base64.*;
 
 
 import java.math.BigInteger;
@@ -26,6 +27,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Base64;
 
 /**
  * @author djb61
@@ -54,9 +56,16 @@ public class DH1080 {
 
 	public DH1080() {
 		try {
+			Decoder b64dec = Base64.getDecoder();
 			SecureRandom sRNG = SecureRandom.getInstance("SHA1PRNG");
-			_privateInt = new BigInteger(1080, sRNG);
-			BigInteger primeInt = new BigInteger(1,decodeB64(PRIME));
+			byte[] privateIntBA = new BigInteger(1080, sRNG).toByteArray();
+			while ( (privateIntBA[0] < 0x40) || (privateIntBA[0] >= 0xFB) ) {
+				privateIntBA[0] = (byte) (( privateIntBA[0] + sRNG.nextInt() + 1 ) & 0xFF);
+			}
+			
+			_privateInt = new BigInteger(privateIntBA);
+
+			BigInteger primeInt = new BigInteger(1,b64dec.decode(PRIME));
 			_publicInt = (new BigInteger("2")).modPow(_privateInt, primeInt);
 		} catch (NoSuchAlgorithmException e) {
 			logger.debug("Algorithm for DH1080 random number generator not available",e);
